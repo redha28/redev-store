@@ -1,0 +1,25 @@
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+# install bash biar ada
+RUN apk add --no-cache bash
+
+# install deps
+COPY package*.json ./
+RUN npm install
+
+# copy source code
+COPY . .
+
+# copy wait-for-it.sh
+COPY wait-for-it.sh /app/wait-for-it.sh
+RUN chmod +x /app/wait-for-it.sh
+
+# build nestjs ke dist/
+RUN npm run build
+
+EXPOSE 3000
+
+# jalankan via bash
+CMD ["bash", "-c", "./wait-for-it.sh mysql:${DATABASE_PORT} -- npm run seed && npm run start:prod"]
